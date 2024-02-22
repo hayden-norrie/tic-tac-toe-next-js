@@ -1,4 +1,3 @@
-// features/game/gameSlice.ts
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 
 interface GameState {
@@ -14,9 +13,9 @@ const initialState: GameState = {
     ['', '', ''],
     ['', '', ''],
     ['', '', ''],
-  ], // Assuming a 3x3 board for Tic Tac Toe
-  status: '', // e.g., "playing", "draw", "X wins", "O wins"
-  currentPlayer: 'X', // or 'O'
+  ],
+  status: '',
+  currentPlayer: 'X',
 }
 
 export const gameSlice = createSlice({
@@ -43,7 +42,7 @@ export const gameSlice = createSlice({
         ['', '', ''],
       ]
       state.status = ''
-      state.currentPlayer = 'X' // Assuming 'X' starts the game
+      state.currentPlayer = 'X'
     },
   },
 })

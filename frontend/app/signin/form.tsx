@@ -36,8 +36,8 @@ export const SigninForm: React.FC = () => {
         dispatch(setEmailAddress(email))
         dispatch(setBoard(response.data.gameBoard))
 
-        router.push('/game') // Assuming '/game' is the path to your game page
-        
+        router.push('/game')
+
       } else {
         console.error('Failed to retrieve saved game in Signin Page')
       }

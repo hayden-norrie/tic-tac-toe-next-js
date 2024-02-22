@@ -4,7 +4,7 @@ import React from 'react'
 import { useState } from 'react'
 import { Select, MenuItem, SelectChangeEvent, Button, } from '@mui/material'
 import Grid from '@mui/material/Grid';
-import axios from 'axios' // Import Axios
+import axios from 'axios'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 import { Container, Typography } from '@mui/material'
@@ -19,11 +19,9 @@ import {
 
 export default function Game () {
   const username = useAppSelector((state) => state.userReducer.email)
-  // Retrieve the game board state from Redux
   const gameBoardRedux = useAppSelector((state) => state.gameReducer.gameBoard)
   const statusRedux = useAppSelector((state) => state.gameReducer.status)
 
-  // Initialize local state with the game board from Redux
   const [gameBoard, setGameBoard] =
     useState<GameState['gameBoard']>(gameBoardRedux)
   const [difficulty, setDifficulty] = useState('easy')
@@ -31,7 +29,6 @@ export default function Game () {
   const dispatch = useDispatch()
   const router = useRouter()
 
-  // Update local state whenever Redux state changes
   if (gameBoard !== gameBoardRedux) {
     setGameBoard(gameBoardRedux)
   }
@@ -64,8 +61,8 @@ export default function Game () {
     colIndex: number
   ): Promise<void> => {
     try {
-      const difficultyLevel = difficulty // Assuming you have the difficulty level
-      const action: ActionBody = { row: rowIndex, column: colIndex } // Example action data
+      const difficultyLevel = difficulty 
+      const action: ActionBody = { row: rowIndex, column: colIndex }
 
       const response = await axios.post<ResponseBody>(
         'http://localhost:3001/gameplay',
@@ -83,8 +80,7 @@ export default function Game () {
       if (response.status === 201) {
         dispatch(setGameStatus(response.data.gameStatus))
 
-        // update gameboard state for UI changes
-        dispatch(updateGameBoard({ row: rowIndex, col: colIndex, value: 'X' })) // update user move
+        dispatch(updateGameBoard({ row: rowIndex, col: colIndex, value: 'X' })) 
 
         if (response.data.botResponse != null) {
           dispatch(
@@ -93,13 +89,13 @@ export default function Game () {
               col: response.data.botResponse.column,
               value: 'O',
             })
-          ) // update AI move
+          ) 
         }
 
         setGameBoard(gameBoardRedux)
 
         const gameStatus = response.data.gameStatus
-        
+
       } else {
         console.error('Failed to retrieve saved game in the actual game')
       }
@@ -132,7 +128,6 @@ export default function Game () {
 
       <Grid container spacing={1}>
         {' '}
-        {/* Top-level container with spacing */}
         {gameBoard.map((row, rowIndex) => (
           <Grid
             container
@@ -142,11 +137,9 @@ export default function Game () {
             justifyContent="center"
           >
             {' '}
-            {/* Container for each row with increased spacing */}
             {row.map((cell, cellIndex) => (
               <Grid item key={cellIndex}>
                 {' '}
-                {/* Each cell of the row */}
                 <div
                   style={{
                     width: 50,
