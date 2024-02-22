@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
-interface GameState {
+export interface GameState {
   email: string;
   gameBoard: string[][];
   status: string;
@@ -10,7 +10,7 @@ interface GameState {
 const initialState: GameState = {
   email: '',
   gameBoard: Array(3).fill(Array(3).fill('')), // Example for a 3x3 board, adjust as needed
-  status: 'idle', // Example status, adjust based on your game logic
+  status: 'ongoing', // Example status, adjust based on your game logic
   currentPlayer: 'X', // Assuming 'X' and 'O' players, adjust as needed
 };
 
@@ -35,7 +35,7 @@ export const gameSlice = createSlice({
       );
     },
     // Action to set the game status
-    setStatus: (state, action: PayloadAction<string>) => {
+    setGameStatus: (state, action: PayloadAction<string>) => {
       state.status = action.payload;
     },
     // Action to change the current player
@@ -46,7 +46,7 @@ export const gameSlice = createSlice({
 });
 
 // Export actions
-export const { setGameEmail, updateGameBoard, setStatus, setCurrentPlayer, setBoard } = gameSlice.actions;
+export const { setGameEmail, updateGameBoard, setGameStatus, setCurrentPlayer, setBoard } = gameSlice.actions;
 
 // Export reducer
 export default gameSlice.reducer;

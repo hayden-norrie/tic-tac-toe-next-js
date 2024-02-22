@@ -3,36 +3,105 @@
 import React from 'react';
 import { useState } from 'react';
 import { Select, MenuItem, SelectChangeEvent, Button } from '@mui/material';
-import Paper from '@mui/material/Paper';
 import Grid from '@mui/material/Grid';
+import axios from 'axios'; // Import Axios
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { Container, Typography } from '@mui/material';
 import { useAppSelector } from '../redux/store';
-import FormControl from '@mui/material/FormControl';
-import InputLabel from '@mui/material/InputLabel';
+import { useDispatch } from 'react-redux';
+import { updateGameBoard, GameState, setGameStatus } from '../redux/features/gameSlice';
 
-// Must fetch the game upon loading
-// Fill the blocks
-// Logout should take a user back to the sign in
+
 const Game = () => {
 
   const username = useAppSelector((state) => state.userReducer.email)
-  const gameBoard = useAppSelector((state) => state.gameReducer.gameBoard)
+  // Retrieve the game board state from Redux
+  const gameBoardRedux = useAppSelector((state) => state.gameReducer.gameBoard);
+  const statusRedux = useAppSelector((state) => state.gameReducer.status);
+
+  // Initialize local state with the game board from Redux
+  const [gameBoard, setGameBoard] = useState<GameState['gameBoard']>(gameBoardRedux);
   const [difficulty, setDifficulty] = useState('easy');
+  const [status, setStatus] = useState<GameState['status']>(statusRedux);
+  const dispatch = useDispatch();
+
+  // Update local state whenever Redux state changes
+  if (gameBoard !== gameBoardRedux) {
+    setGameBoard(gameBoardRedux);
+  }
+
+  if (status !== statusRedux) {
+    setStatus(statusRedux);
+  }
 
   useEffect(() => {
-    
-  }, []); // Empty dependency array means this runs once on mount
+  }, []);
 
   const router = useRouter()
 
-  const handleLogout = () => {
-    router.push('/signin'); // Assuming '/game' is the path to your game page
-  };
+  interface ActionBody {
+    row: number;
+    column: number;
+  }
+  
+  interface ResponseBody {
+    gameStatus: string;
+    botResponse?: {
+      row: number;
+      column: number;
+    };
+  }
+  
 
-   const handleCellClick = (rowIndex: number, colIndex: number): void => {
-    alert(`Cell clicked: row ${rowIndex}, col ${colIndex}`);
+  const handleLogout = () => {
+    router.push('/signin'); 
+  }
+
+  const handleCellClick = async (rowIndex: number, colIndex: number): Promise<void> => {
+
+    try {
+
+      const difficultyLevel = difficulty; // Assuming you have the difficulty level
+      const action: ActionBody = { row: rowIndex, column: colIndex }; // Example action data
+  
+      const response = await axios.post<ResponseBody>('http://localhost:3001/gameplay', action, {
+        headers: {
+          Authorization: username
+        },
+        params: {
+          difficulty: difficultyLevel
+        }
+      });
+
+      if (response.data.gameStatus != "ongoing") {
+        return;
+      }
+
+  
+      if (response.status === 201) {
+
+        dispatch(setGameStatus(response.data.gameStatus))
+
+        // update gameboard state for UI changes
+        dispatch(updateGameBoard({ row: rowIndex, col: colIndex, value: "X" })); // update user move
+
+        if (response.data.botResponse != null){
+          dispatch(updateGameBoard({ row: response.data.botResponse.row, col: response.data.botResponse.column, value: "O" })); // update AI move
+        }
+
+        setGameBoard(gameBoardRedux)
+
+
+            // Check game status to see if someone wins or if it's a tie
+      const gameStatus = response.data.gameStatus;
+   
+      } else {
+        console.error('Failed to retrieve saved game in the actual game');
+      }
+    } catch (error) {
+      console.error('Error retrieving saved game:', error);
+    }
   };
 
   // Correctly typing the onChange event handler for MUI Select
@@ -40,7 +109,6 @@ const Game = () => {
     setDifficulty(event.target.value);
     alert(event.target.value);
   };
-
 
   return (
     <Container maxWidth="xs">

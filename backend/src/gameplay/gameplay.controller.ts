@@ -14,6 +14,10 @@ interface ResponseBody {
   };
 }
 
+interface ResponseBodyRetrieveGame {
+  gameBoard: string[][];
+}
+
 @Controller('gameplay')
 export class GameplayController {
 
@@ -31,45 +35,105 @@ async takeTurn(
 //   }
 
   try {
+
+    // User gameplay logic
+    // ==================================================
+    // ==================================================
+
     const currentGame = await this.gameplayService.getGameByEmail(userEmail);
 
-    // Assume you have methods to:
-        // validate the move
-        // update the board
+    if(currentGame[action.row][action.column] != '') {
+      console.log("Spot taken");
+      return null;
+    }
+
     currentGame[action.row][action.column] = 'X'; // Assuming 'X' is the user
-        // check the game status
     const playerWins = this.gameplayService.checkWin(currentGame, 'X');
 
-    // Here, you'd call those methods. For simplicity, let's focus on the bot's move:
+    if(playerWins) {
+
+      console.log("USER WINS!!!!!")
+
+      await this.gameplayService.createOrUpdateGame(userEmail, currentGame);
+  
+      return {
+        gameStatus: "X wins",
+        botResponse: {
+          row: null,
+          column: null
+        },
+      };
+    }
+
+    // ====================================================
+
+
+
+
+    // If user has not won, execute the bot move.
+    // ==================================================
 
     console.log("Retrieving bot move using difficulty " + difficulty)
 
     const botMove = this.gameplayService.generateBotMove(currentGame, difficulty);
-
-    
-    // After determining the bot's move, update the game state accordingly
+  
     if (botMove) {
-      currentGame[botMove.row][botMove.column] = 'O'; // Assuming 'O' is the bot
+      currentGame[botMove.row][botMove.column] = 'O'; 
     }
 
-    // Check for win or draw conditions
     const botWins = this.gameplayService.checkWin(currentGame, 'O');
-    const isDraw = this.gameplayService.isBoardFull(currentGame) && !playerWins && !botWins;
 
-    let gameStatus = 'ongoing';
-    if (playerWins) {
-      gameStatus = 'X wins';
-    } else if (botWins) {
-      gameStatus = 'O wins';
-    } else if (isDraw) {
-      gameStatus = 'draw';
+    if(botWins) {
+
+      console.log("BOT WINS!!!!!")
+
+      await this.gameplayService.createOrUpdateGame(userEmail, currentGame);
+  
+      return {
+        gameStatus: "O wins",
+        botResponse: {
+          row: botMove.row,
+          column: botMove.column
+        },
+      };
     }
 
-    // Save the updated game state
+    // ==================================================
+
+
+
+    // If user and AI have not won, check for a DRAW
+    // ==================================================
+
+    const isDraw = this.gameplayService.isBoardFull(currentGame);
+
+    if(isDraw) {
+
+      console.log("ITS A DRAW")
+
+      await this.gameplayService.createOrUpdateGame(userEmail, currentGame);
+  
+      return {
+        gameStatus: "draw",
+        botResponse: {
+          row: null,
+          column: null
+        },
+      };
+    }
+
+    // ==================================================
+
+ 
+    // Regular move if no wins or draw
+    // ==================================================
+
     await this.gameplayService.createOrUpdateGame(userEmail, currentGame);
 
+    console.log("Regular move done.")
+
     return {
-      gameStatus: gameStatus,
+      gameStatus: 'ongoing',
       botResponse: botMove,
     };
 
@@ -80,25 +144,40 @@ async takeTurn(
 
 
 
+  // @Get("")
+  // async retrieveSavedGame(@Headers('Authorization') userEmail: string) {
+
+  //   console.log("retrieveSavedGame()");
+  //   console.log("Using email: " + userEmail);
+  //   const gameBoard = await this.gameplayService.getGameByEmail(userEmail);
+
+  //   console.log("GAME BOARD: " + gameBoard);
+
+  //   if(gameBoard == null){
+  //     console.log("THE GAME BOARD IS NULL")
+  //     // await this.gameplayService.createOrUpdateGame(userEmail, [['','',''],['','',''],['','','']]);
+  //     return [['','',''],['','',''],['','','']];
+  //   }
+
+  //   return { gameBoard };
+  // }
+
   @Get("")
-  async retrieveSavedGame(@Headers('Authorization') userEmail: string) {
+async retrieveSavedGame(@Headers('Authorization') userEmail: string): Promise<ResponseBodyRetrieveGame> {
+ 
+  try {
+    // Retrieve the saved game based on the user's email
+    const savedGame = await this.gameplayService.getGameByEmail(userEmail);
 
-    console.log("retrieveSavedGame()");
-    console.log("Using email: " + userEmail);
-    const gameBoard = await this.gameplayService.getGameByEmail(userEmail);
+    console.log(JSON.stringify(savedGame) + " --- RETURNED FROM getGameByEmail")
 
-    console.log("GAME BOARD: " + gameBoard);
+      return { 
+        gameBoard: savedGame
+      };
 
-    if(gameBoard == null){
-      await this.gameplayService.createOrUpdateGame(userEmail, [['','',''],['','',''],['','','']]);
-    }
-
-    return { gameBoard };
+  } catch (error) {
+    // If an error occurs, return an error response
   }
-
-  private isEmptyObject(obj) {
-    console.log("STRING --> " + JSON.stringify(obj));
-    return JSON.stringify(obj) === '{}';
-  }
+}
 
 }

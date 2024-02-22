@@ -6,7 +6,7 @@ import Button from '@mui/material/Button';
 import { useRouter } from 'next/navigation';
 import axios from 'axios'; // Import Axios
 import { setEmailAddress, clearEmailAddress } from '../redux/features/userSlice';
-import { setBoard } from '../redux/features/gameSlice';
+import { setBoard, setGameStatus } from '../redux/features/gameSlice';
 import { useDispatch } from "react-redux"
 import { AppDispatch } from '../redux/store';
 
@@ -23,7 +23,6 @@ export const SigninForm: React.FC = () => {
 
   const handleRetrieveGame = async () => {
 
-    alert("Fetching game");
     try {
       const response = await axios.get('http://localhost:3001/gameplay', {
         headers: {
@@ -33,15 +32,13 @@ export const SigninForm: React.FC = () => {
 
       if (response.status === 200) {
 
-        alert("Done fetching");
-        alert(JSON.stringify(JSON.stringify(response.data.gameBoard) + " ---- HERE"))
-
-    dispatch(setEmailAddress(email));
-    dispatch(setBoard(response.data.gameBoard));
+        alert(JSON.stringify(response))
+        dispatch(setEmailAddress(email));
+        dispatch(setBoard(response.data.gameBoard));
 
     router.push('/game'); // Assuming '/game' is the path to your game page
       } else {
-        console.error('Failed to retrieve saved game');
+        console.error('Failed to retrieve saved game in Signin Page');
       }
     } catch (error) {
       console.error('Error retrieving saved game:', error);
