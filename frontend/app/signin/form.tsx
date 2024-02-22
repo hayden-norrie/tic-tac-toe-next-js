@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import axios from 'axios' // Import Axios
+import axios from 'axios' 
 import { setEmailAddress, clearEmailAddress } from '../redux/features/userSlice'
 import { setBoard, setGameStatus } from '../redux/features/gameSlice'
 import { useDispatch } from 'react-redux'
@@ -11,11 +11,7 @@ import Container from '@mui/material/Container'
 import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
 import TextField from '@mui/material/TextField'
-import FormControlLabel from '@mui/material/FormControlLabel'
-import Checkbox from '@mui/material/Checkbox'
 import Button from '@mui/material/Button'
-import Grid from '@mui/material/Grid'
-import Link from '@mui/material/Link'
 
 export const SigninForm: React.FC = () => {
   const [email, setEmail] = useState('')
@@ -39,7 +35,9 @@ export const SigninForm: React.FC = () => {
       if (response.status === 200) {
         dispatch(setEmailAddress(email))
         dispatch(setBoard(response.data.gameBoard))
+
         router.push('/game') // Assuming '/game' is the path to your game page
+        
       } else {
         console.error('Failed to retrieve saved game in Signin Page')
       }
@@ -103,21 +101,5 @@ export const SigninForm: React.FC = () => {
         </Box>
       </Box>
     </Container>
-
-    //     <div>
-    //     <h2>Sign In</h2>
-    //     <TextField
-    //       type="email"
-    //       label="Email"
-    //       variant="outlined"
-    //       value={email}
-    //       onChange={handleEmailChange}
-    //       fullWidth
-    //       margin="normal"
-    //     />
-    //     <Button variant="contained" color="primary" onClick={handleRetrieveGame}>
-    //       Login
-    //     </Button>
-    //   </div>
   )
 }

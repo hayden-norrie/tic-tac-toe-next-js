@@ -2,16 +2,14 @@
 
 import React from 'react'
 import { useState } from 'react'
-import { Select, MenuItem, SelectChangeEvent, Button } from '@mui/material'
-import Grid from '@mui/material/Grid'
+import { Select, MenuItem, SelectChangeEvent, Button, } from '@mui/material'
+import Grid from '@mui/material/Grid';
 import axios from 'axios' // Import Axios
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 import { Container, Typography } from '@mui/material'
 import { useAppSelector } from '../redux/store'
 import { useDispatch } from 'react-redux'
-import Box from '@mui/material/Box'
-import TextField from '@mui/material/TextField'
 
 import {
   updateGameBoard,
@@ -19,7 +17,7 @@ import {
   setGameStatus,
 } from '../redux/features/gameSlice'
 
-const Game = () => {
+export default function Game () {
   const username = useAppSelector((state) => state.userReducer.email)
   // Retrieve the game board state from Redux
   const gameBoardRedux = useAppSelector((state) => state.gameReducer.gameBoard)
@@ -31,6 +29,7 @@ const Game = () => {
   const [difficulty, setDifficulty] = useState('easy')
   const [status, setStatus] = useState<GameState['status']>(statusRedux)
   const dispatch = useDispatch()
+  const router = useRouter()
 
   // Update local state whenever Redux state changes
   if (gameBoard !== gameBoardRedux) {
@@ -41,9 +40,7 @@ const Game = () => {
     setStatus(statusRedux)
   }
 
-  useEffect(() => {}, [])
-
-  const router = useRouter()
+  useEffect(() => {}, [router])
 
   interface ActionBody {
     row: number
@@ -101,8 +98,8 @@ const Game = () => {
 
         setGameBoard(gameBoardRedux)
 
-        // Check game status to see if someone wins or if it's a tie
         const gameStatus = response.data.gameStatus
+        
       } else {
         console.error('Failed to retrieve saved game in the actual game')
       }
@@ -111,7 +108,6 @@ const Game = () => {
     }
   }
 
-  // Correctly typing the onChange event handler for MUI Select
   const handleDifficultyChange = (event: SelectChangeEvent<string>) => {
     setDifficulty(event.target.value)
     alert(event.target.value)
@@ -181,8 +177,5 @@ const Game = () => {
         Logout
       </Button>
     </Container>
-
   )
 }
-
-export default Game
