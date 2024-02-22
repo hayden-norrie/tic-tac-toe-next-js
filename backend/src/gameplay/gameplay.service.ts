@@ -1,6 +1,6 @@
-import { Injectable } from "@nestjs/common";
-import { InjectModel } from "@nestjs/mongoose";
-import { Model } from "mongoose";
+import { Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 
 interface GameState {
   email: string;
@@ -12,84 +12,81 @@ interface GameState {
 @Injectable()
 export class GameplayService {
   constructor(
-    @InjectModel("GameState") private gameStateModel: Model<GameState>
+    @InjectModel('GameState') private gameStateModel: Model<GameState>,
   ) {}
 
   async createOrUpdateGame(
     email: string,
-    gameBoard: string[][]
+    gameBoard: string[][],
   ): Promise<void> {
-    console.log("Looking for an existing game in the service");
     const existingGame = await this.gameStateModel.findOne({ email }).exec();
 
     if (existingGame) {
-      console.log("Exisitng game found");
-      console.log("createOrUpdate() --> " + JSON.stringify(existingGame));
       existingGame.gameBoard = gameBoard;
       await existingGame.save();
     } else {
-      console.log("Creating new game");
       const newGame = new this.gameStateModel({ email, gameBoard });
       await newGame.save();
     }
   }
 
   async getGameByEmail(email: string): Promise<string[][]> {
-    console.log("Getting game by email" + " -> " + email);
-
     const game = await this.gameStateModel.findOne({ email }).exec();
 
-    console.log("getGameByEmail() --> Resulting game:\n " + game);
-
-    // if (game == null || game.status != 'ongoing') {
-    //   console.log("BLANKKKK")
-    //   return [['','',''],['','',''],['','','']];
-    // }
-
     if (game == null) {
-      console.log("BLANKKKK")
-      return [['','',''],['','',''],['','','']];
+      return [
+        ['', '', ''],
+        ['', '', ''],
+        ['', '', ''],
+      ];
     }
 
     return game.gameBoard;
   }
 
   isBoardFull(gameBoard: string[][]): boolean {
-    return !gameBoard.some((row) => row.includes(""));
+    return !gameBoard.some((row) => row.includes(''));
   }
 
-   checkWin(gameBoard: string[][], player: "X" | "O"): boolean {
+  checkWin(gameBoard: string[][], player: 'X' | 'O'): boolean {
     for (let i = 0; i < 3; i++) {
-        if (
-            (gameBoard[i][0] === player && gameBoard[i][1] === player && gameBoard[i][2] === player) ||
-            (gameBoard[0][i] === player && gameBoard[1][i] === player && gameBoard[2][i] === player)
-        ) {
-            return true;
-        }
+      if (
+        (gameBoard[i][0] === player &&
+          gameBoard[i][1] === player &&
+          gameBoard[i][2] === player) ||
+        (gameBoard[0][i] === player &&
+          gameBoard[1][i] === player &&
+          gameBoard[2][i] === player)
+      ) {
+        return true;
+      }
     }
 
     // Check diagonals
     if (
-        (gameBoard[0][0] === player && gameBoard[1][1] === player && gameBoard[2][2] === player) ||
-        (gameBoard[0][2] === player && gameBoard[1][1] === player && gameBoard[2][0] === player)
+      (gameBoard[0][0] === player &&
+        gameBoard[1][1] === player &&
+        gameBoard[2][2] === player) ||
+      (gameBoard[0][2] === player &&
+        gameBoard[1][1] === player &&
+        gameBoard[2][0] === player)
     ) {
-        return true;
+      return true;
     }
 
     return false;
-}
+  }
 
   generateBotMove(
     gameBoard: string[][],
-    difficulty: "easy" | "medium" | "hard"
+    difficulty: 'easy' | 'medium' | 'hard',
   ): { row: number; column: number } | null {
-
     switch (difficulty) {
-      case "easy":
+      case 'easy':
         return this.generateEasyMove(gameBoard);
-      case "medium":
+      case 'medium':
         return this.generateMediumMove(gameBoard);
-      case "hard":
+      case 'hard':
         return this.generateHardMove(gameBoard);
       default:
         return null;
@@ -97,15 +94,25 @@ export class GameplayService {
   }
 
   private generateEasyMove(
-    gameBoard: string[][]
+    gameBoard: string[][],
   ): { row: number; column: number } | null {
-    
-    console.log("Easy");
+    for (let row = 0; row < gameBoard.length; row++) {
+      for (let col = 0; col < gameBoard[row].length; col++) {
+        if (gameBoard[row][col] === '') {
+          return { row, column: col };
+        }
+      }
+    }
+    return null; // No empty spots found
+  }
 
+  private generateMediumMove(
+    gameBoard: string[][],
+  ): { row: number; column: number } | null {
     const emptySpots = [];
     for (let row = 0; row < gameBoard.length; row++) {
       for (let col = 0; col < gameBoard[row].length; col++) {
-        if (gameBoard[row][col] === "") {
+        if (gameBoard[row][col] === '') {
           emptySpots.push({ row, column: col });
         }
       }
@@ -117,23 +124,62 @@ export class GameplayService {
     return emptySpots[randomIndex];
   }
 
-  private generateMediumMove(
-    gameBoard: string[][]
-  ): { row: number; column: number } | null {
-    console.log("Medium");
-
-    // Attempt to block the player's win or choose a random move
-    // Detailed logic for blocking or winning moves needed
-    return this.generateEasyMove(gameBoard); // Fallback to easy move as a placeholder
-  }
-
   private generateHardMove(
-    gameBoard: string[][]
+    gameBoard: string[][],
   ): { row: number; column: number } | null {
-    console.log("Hard");
+    const userPlayer = 'X';
+    const aiPlayer = 'O';
 
-    // Implement the Minimax algorithm or another advanced strategy
-    // This would be a more complex implementation
-    return this.generateEasyMove(gameBoard); // Fallback to easy move as a placeholder
+    // Minimax algorithm function
+    const minimax = (
+      gameBoard: string[][],
+      depth: number,
+      isMaximizing: boolean,
+    ): number => {
+      const result = this.checkWin(gameBoard, userPlayer)
+        ? -10
+        : this.checkWin(gameBoard, aiPlayer)
+          ? 10
+          : 0;
+      if (result !== 0) {
+        return result;
+      }
+      if (depth === 0) return 0;
+
+      const player = isMaximizing ? aiPlayer : userPlayer;
+
+      let bestScore = isMaximizing ? -Infinity : Infinity;
+      for (let row = 0; row < gameBoard.length; row++) {
+        for (let col = 0; col < gameBoard[row].length; col++) {
+          if (gameBoard[row][col] === '') {
+            gameBoard[row][col] = player;
+            const score = minimax(gameBoard, depth - 1, !isMaximizing);
+            gameBoard[row][col] = ''; // Undo the move
+            bestScore = isMaximizing
+              ? Math.max(bestScore, score)
+              : Math.min(bestScore, score);
+          }
+        }
+      }
+      return bestScore;
+    };
+
+    // Find the best move using the Minimax algorithm
+    let bestScore = -Infinity;
+    let bestMove: { row: number; column: number } | null = null;
+    for (let row = 0; row < gameBoard.length; row++) {
+      for (let col = 0; col < gameBoard[row].length; col++) {
+        if (gameBoard[row][col] === '') {
+          gameBoard[row][col] = aiPlayer;
+          const score = minimax(gameBoard, 5, false); // Adjust the depth as needed
+          gameBoard[row][col] = ''; // Undo the move
+          if (score > bestScore) {
+            bestScore = score;
+            bestMove = { row, column: col };
+          }
+        }
+      }
+    }
+    return bestMove;
   }
 }
