@@ -17,11 +17,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={inter.className}>
+      <main style={{ width: '100vw', height: '100vh' }}>
         <ReduxProvider>
           {children}
         </ReduxProvider>
-      </body>
+      </main>
     </html>
   );
 }
